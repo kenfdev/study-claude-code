@@ -1,4 +1,6 @@
-# Modern Todo App Development Guidelines## Technology Stack (STRICT REQUIREMENTS)- **Frontend**: React 18 + TypeScript + React Router v7 + Tailwind CSS + Vite
+# Modern Todo App Development Guidelines
+## Technology Stack (STRICT REQUIREMENTS)
+- **Frontend**: React 18 + TypeScript + React Router v7 + Tailwind CSS + Vite
 - **Backend**: Node.js + Express + TypeScript + SQLite
 - **Testing**: vitest + @testing-library/react + supertest
 - **E2E**: Playwright
