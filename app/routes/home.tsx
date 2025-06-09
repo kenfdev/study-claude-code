@@ -19,6 +19,7 @@ export default function Home() {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [todosLoading, setTodosLoading] = useState(false);
   const [todoCreating, setTodoCreating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -42,6 +43,7 @@ export default function Home() {
 
   async function handleCreateTodo(title: string) {
     setTodoCreating(true);
+    setError(null);
     try {
       const response = await authService.createTodo({ title });
       if (response.success && response.todo) {
@@ -82,6 +84,26 @@ export default function Home() {
         )
       );
       console.error('Failed to update todo:', error);
+    }
+  }
+
+  async function handleDeleteTodo(id: number) {
+    setError(null);
+    try {
+      const response = await authService.deleteTodo(id);
+      if (response.success) {
+        setTodos(prev => prev.filter(todo => todo.id !== id));
+        return { success: true };
+      } else {
+        const errorMessage = response.message || 'Todo削除に失敗しました';
+        setError(errorMessage);
+        return { success: false, message: errorMessage };
+      }
+    } catch (error) {
+      console.error('Failed to delete todo:', error);
+      const errorMessage = 'ネットワークエラーが発生しました';
+      setError(errorMessage);
+      return { success: false, message: errorMessage };
     }
   }
 
@@ -156,6 +178,12 @@ export default function Home() {
           </div>
 
           <div className="bg-white shadow rounded-lg p-6">
+            {error && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+                <p className="text-sm text-red-600">{error}</p>
+              </div>
+            )}
+            
             <TodoForm 
               onSubmit={handleCreateTodo}
               isLoading={todoCreating}
@@ -163,6 +191,7 @@ export default function Home() {
             
             <TodoList 
               todos={todos}
+              onDelete={handleDeleteTodo}
               isLoading={todosLoading}
               onToggleComplete={handleToggleComplete}
             />
