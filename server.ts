@@ -5,6 +5,7 @@ import { loginHandler } from './functions/api/auth/login';
 import { authMiddleware } from './functions/lib/middleware';
 import { createTodoHandler } from './functions/api/todos/create';
 import { listTodosHandler } from './functions/api/todos/list';
+import { deleteTodoHandler } from './functions/api/todos/delete';
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3001;
@@ -25,6 +26,7 @@ app.get('/api/auth/me', authMiddleware, (req, res) => {
 // Todo API endpoints
 app.post('/api/todos', authMiddleware, createTodoHandler);
 app.get('/api/todos', authMiddleware, listTodosHandler);
+app.delete('/api/todos/:id', authMiddleware, deleteTodoHandler);
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });

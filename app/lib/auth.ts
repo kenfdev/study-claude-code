@@ -129,6 +129,22 @@ export class AuthService {
     return response.json();
   }
 
+  async deleteTodo(id: number): Promise<{ success: boolean; message?: string }> {
+    const token = this.getToken();
+    if (!token) {
+      return { success: false, message: 'No token found' };
+    }
+
+    const response = await fetch(`${API_BASE_URL}/todos/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    return response.json();
+  }
+
   saveToken(token: string): void {
     if (typeof window !== 'undefined') {
       localStorage.setItem('auth_token', token);
