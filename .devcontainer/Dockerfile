@@ -20,7 +20,8 @@ RUN apt update && apt install -y less \
   dnsutils \
   aggregate \
   jq \
-  tmux
+  tmux \
+  vim
 
 # Ensure default node user has access to /usr/local/share
 RUN mkdir -p /usr/local/share/npm-global && \
@@ -69,6 +70,9 @@ RUN sh -c "$(wget -O- https://github.com/deluan/zsh-in-docker/releases/download/
 
 # Install Claude
 RUN npm install -g @anthropic-ai/claude-code
+
+# Add tmux configuration for node user
+RUN echo "set -g mouse on" > /home/node/.tmux.conf
 
 # Copy and set up firewall script
 COPY init-firewall.sh /usr/local/bin/

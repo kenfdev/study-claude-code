@@ -1,4 +1,6 @@
-const API_BASE_URL = 'http://localhost:3001/api';
+const API_BASE_URL = typeof window !== 'undefined' 
+  ? '/api'  // ブラウザから同じオリジンでアクセス
+  : 'http://localhost:3001/api';  // サーバーサイドでは直接アクセス
 
 export interface User {
   id: number;

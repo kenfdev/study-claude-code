@@ -9,7 +9,7 @@
     "typecheck": "react-router typegen && tsc",
     "test": "vitest",
     "test:watch": "vitest --watch",
-    "server": "tsx server.ts",
+    "server": "tsx watch server.ts",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix"
   },
