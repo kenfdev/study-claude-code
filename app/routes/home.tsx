@@ -1,6 +1,11 @@
 import type { Route } from "./+types/home";
 import { Link } from "react-router";
 import { useAuth } from "~/lib/auth-context";
+import { TodoForm } from "~/components/TodoForm";
+import { TodoList } from "~/components/TodoList";
+import { authService } from "~/lib/auth";
+import type { Todo } from "~/lib/auth";
+import { useState, useEffect } from "react";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -11,6 +16,47 @@ export function meta({}: Route.MetaArgs) {
 
 export default function Home() {
   const { user, isAuthenticated, logout, isLoading } = useAuth();
+  const [todos, setTodos] = useState<Todo[]>([]);
+  const [todosLoading, setTodosLoading] = useState(false);
+  const [todoCreating, setTodoCreating] = useState(false);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadTodos();
+    }
+  }, [isAuthenticated]);
+
+  async function loadTodos() {
+    setTodosLoading(true);
+    try {
+      const response = await authService.getTodos();
+      if (response.success && response.todos) {
+        setTodos(response.todos);
+      }
+    } catch (error) {
+      console.error('Failed to load todos:', error);
+    } finally {
+      setTodosLoading(false);
+    }
+  }
+
+  async function handleCreateTodo(title: string) {
+    setTodoCreating(true);
+    try {
+      const response = await authService.createTodo({ title });
+      if (response.success && response.todo) {
+        setTodos(prev => [response.todo!, ...prev]);
+        return { success: true };
+      } else {
+        return { success: false, message: response.message || 'Todo作成に失敗しました' };
+      }
+    } catch (error) {
+      console.error('Failed to create todo:', error);
+      return { success: false, message: 'ネットワークエラーが発生しました' };
+    } finally {
+      setTodoCreating(false);
+    }
+  }
 
   if (isLoading) {
     return (
@@ -71,15 +117,27 @@ export default function Home() {
         </div>
       </nav>
 
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+      <main className="max-w-4xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
-          <div className="text-center">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">
-              ダッシュボード
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              Todo管理
             </h2>
             <p className="text-gray-600">
-              認証が成功しました！Todo機能はこれから実装します。
+              新しいTodoを追加して、タスクを管理しましょう
             </p>
+          </div>
+
+          <div className="bg-white shadow rounded-lg p-6">
+            <TodoForm 
+              onSubmit={handleCreateTodo}
+              isLoading={todoCreating}
+            />
+            
+            <TodoList 
+              todos={todos}
+              isLoading={todosLoading}
+            />
           </div>
         </div>
       </main>

@@ -22,6 +22,29 @@ export interface RegisterData {
   password: string;
 }
 
+export interface Todo {
+  id: number;
+  title: string;
+  completed: boolean;
+  created_at: string;
+}
+
+export interface TodoResponse {
+  success: boolean;
+  todo?: Todo;
+  message?: string;
+}
+
+export interface TodoListResponse {
+  success: boolean;
+  todos?: Todo[];
+  message?: string;
+}
+
+export interface CreateTodoData {
+  title: string;
+}
+
 export class AuthService {
   private static instance: AuthService;
   
@@ -63,6 +86,39 @@ export class AuthService {
     }
 
     const response = await fetch(`${API_BASE_URL}/auth/me`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    return response.json();
+  }
+
+  async createTodo(data: CreateTodoData): Promise<TodoResponse> {
+    const token = this.getToken();
+    if (!token) {
+      return { success: false, message: 'No token found' };
+    }
+
+    const response = await fetch(`${API_BASE_URL}/todos`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
+
+    return response.json();
+  }
+
+  async getTodos(): Promise<TodoListResponse> {
+    const token = this.getToken();
+    if (!token) {
+      return { success: false, message: 'No token found' };
+    }
+
+    const response = await fetch(`${API_BASE_URL}/todos`, {
       headers: {
         'Authorization': `Bearer ${token}`,
       },

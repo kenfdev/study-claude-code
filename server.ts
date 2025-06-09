@@ -3,6 +3,8 @@ import cors from 'cors';
 import { registerHandler } from './functions/api/auth/register';
 import { loginHandler } from './functions/api/auth/login';
 import { authMiddleware } from './functions/lib/middleware';
+import { createTodoHandler } from './functions/api/todos/create';
+import { listTodosHandler } from './functions/api/todos/list';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -19,6 +21,10 @@ app.get('/api/auth/me', authMiddleware, (req, res) => {
     user: req.user
   });
 });
+
+// Todo API endpoints
+app.post('/api/todos', authMiddleware, createTodoHandler);
+app.get('/api/todos', authMiddleware, listTodosHandler);
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
