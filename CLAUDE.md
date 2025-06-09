@@ -1,92 +1,75 @@
-# Modern Todo App Development Guidelines
-## Technology Stack (STRICT REQUIREMENTS)
-- **Frontend**: React 18 + TypeScript + React Router v7 + Tailwind CSS + Vite
-- **Backend**: Node.js + Express + TypeScript + SQLite
-- **Testing**: vitest + @testing-library/react + supertest
-- **E2E**: Playwright
-- **Deployment**: Cloudflare Pages (Frontend) + Cloudflare Workers (Backend)
-## React Router v7 Specific Requirements- Use the new data loading patterns with `loader` functions
-- Implement proper error boundaries with `errorElement`- Use the new `createBrowserRouter` API (not deprecated Switch/Route)
-- Follow the latest file-based routing conventions if applicable
-## Project Structure (ENFORCE THIS)
+# Todoアプリ開発ガイド - ユーザーストーリー実装
 
-```
-src/
-├── components/ # Reusable UI components
-├── pages/ # Route components with loaders
-├── hooks/ # Custom React hooks
-├── utils/ # Pure utility functions
-├── types/ # TypeScript type definitions
-├── api/ # API client functions
-└── tests/ # Component and integration tests
-```
+## プロダクト概要
+**ターゲット**: 個人でタスク管理をしたい人
+**価値提案**: シンプルで使いやすいタスク管理ツール
 
-## Development Commands
-- `npm run dev` - Start both frontend (5173) and backend (3001) with concurrently
-- `npm run test` - Run vitest in watch mode
-- `npm run test:e2e` - Run Playwright E2E tests
-- `npm run build` - Build for Cloudflare Pages deployment
-- `npm run preview` - Preview built app locally
+## 技術スタック
+- Frontend: React Router v7 + TypeScript + Tailwind CSS
+- Backend: Express + SQLite + TypeScript
+- 認証: JWT + bcrypt
+- テスト: vitest + supertest
+- デプロイ: Cloudflare Pages + Workers
 
-## Code Quality Standards (NON-NEGOTIABLE)
-- **TypeScript**: Strict mode enabled, no `any` types
-- **ESLint**: Airbnb configuration + React hooks rules
-- **Prettier**: 2-space indentation, single quotes, trailing commas
-- **Testing**: Minimum 80% code coverage required
-- **Accessibility**: WCAG 2.1 AA compliance mandatory
+## ユーザーストーリー
 
-## API Design Patterns
-- RESTful endpoints: `/api/v1/todos`, `/api/v1/auth`
-- Consistent JSON responses with `{ data, error, message }` structure
-- Proper HTTP status codes (200, 201, 400, 401, 404, 500)
-- Request validation with Zod schemas
-- Rate limiting: 100 requests/minute per IP
+### ストーリー1: ユーザー登録・ログイン
+**As a** 新規ユーザー
+**I want to** アカウントを作成してログインしたい
+**So that** 自分専用のTodoリストを管理できる
 
-## React Patterns to Use
-- Functional components with hooks only (NO class components)
-- Custom hooks for data fetching (`useTodos`, `useAuth`)
-- Context API for global state (auth, theme)
-- Error boundaries for graceful error handling
-- Suspense for async operations
+**受け入れ条件**:
+- メールアドレスとパスワードでアカウント作成できる
+- 作成したアカウントでログインできる
+- ログイン状態が保持される
+- 不正なログインは拒否される
 
-## Vitest Testing Strategy
-```javascript
-// Preferred test structure
-describe('ComponentName', () => {
-  beforeEach(() => {
-    // Setup
-  });
+### ストーリー2: Todo作成
+**As a** ログイン済みユーザー
+**I want to** 新しいTodoを追加したい
+**So that** やるべきことを記録できる
 
-  it('should handle user interaction correctly', async () => {
-    // Arrange
-    // Act
-    // Assert
-  });
-});
-```
+**受け入れ条件**:
+- Todoのタイトルを入力して追加できる
+- 追加したTodoがすぐに一覧に表示される
+- 空のタイトルでは追加できない
 
-## Cloudflare-Specific Requirements
+### ストーリー3: Todo一覧表示
+**As a** ログイン済みユーザー
+**I want to** 自分のTodo一覧を見たい
+**So that** 何をすべきか把握できる
 
-- **Pages**: Static site generation optimized
-- **Workers**: Edge function patterns for API endpoints
-- **Environment Variables**: Use `CLOUDFLARE_` prefix
-- **Build Output**: `/dist` folder with proper `_routes.json`
+**受け入れ条件**:
+- 自分が作成したTodoのみ表示される
+- 完了・未完了の状態が分かる
+- Todoがない場合は適切なメッセージを表示
 
-## CRITICAL RULES (NEVER BREAK THESE)
+### ストーリー4: Todo完了
+**As a** ログイン済みユーザー
+**I want to** Todoを完了状態に変更したい
+**So that** 終わったタスクを管理できる
 
-- ALWAYS write git commit messages in English. NEVER EVER WRITE COMMIT MESSAGES IN OTHER LANGUAGES INCLUDING UNICODE.
-- ALWAYS use React Router v7 patterns (not v6 or older)
-- ALWAYS write tests with vitest (not Jest)
-- ALWAYS target Cloudflare deployment (not Vercel/Netlify)
-- ALWAYS use TypeScript strict mode
-- ALWAYS implement proper error handling
-- ALWAYS ensure mobile-first responsive design
-- ALWAYS run tests before committing
+**受け入れ条件**:
+- チェックボックスで完了状態を切り替えできる
+- 完了したTodoは視覚的に区別される
+- 完了状態はすぐに保存される
 
-## Performance Targets
+### ストーリー5: Todo削除
+**As a** ログイン済みユーザー
+**I want to** 不要なTodoを削除したい
+**So that** リストを整理できる
 
-- Lighthouse Score: 95+ for all metrics
-- First Contentful Paint: < 1.5s
-- Largest Contentful Paint: < 2.5s
-- Bundle Size: Frontend < 300KB gzipped
-- API Response Time: < 200ms average
+**受け入れ条件**:
+- 削除ボタンでTodoを削除できる
+- 削除前に確認メッセージが表示される
+- 削除したTodoは即座に一覧から消える
+
+## 実装ルール
+- 1ストーリー = 1機能 = 1コミット
+- vitest でTDD実装
+- TypeScript strict mode必須
+- ユーザビリティを重視したUI設計
+
+## データベース設計
+users テーブル: id, email, password_hash, created_at
+todos テーブル: id, user_id, title, completed, created_at

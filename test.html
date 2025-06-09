@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Todo App Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 10px; border: 1px solid #ccc; }
+        button { padding: 10px; margin: 5px; cursor: pointer; }
+        input { padding: 8px; margin: 5px; width: 200px; }
+        .result { margin-top: 10px; padding: 10px; background: #f5f5f5; }
+    </style>
+</head>
+<body>
+    <h1>Todo App API Test</h1>
+    
+    <div class="test-section">
+        <h2>1. ユーザー登録テスト</h2>
+        <input type="email" id="regEmail" placeholder="メールアドレス" value="test@example.com">
+        <input type="password" id="regPassword" placeholder="パスワード" value="password123">
+        <button onclick="testRegister()">登録</button>
+        <div id="regResult" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>2. ログインテスト</h2>
+        <input type="email" id="loginEmail" placeholder="メールアドレス" value="test@example.com">
+        <input type="password" id="loginPassword" placeholder="パスワード" value="password123">
+        <button onclick="testLogin()">ログイン</button>
+        <div id="loginResult" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>3. 認証テスト</h2>
+        <button onclick="testAuth()">認証状態確認</button>
+        <div id="authResult" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>4. フロントエンドページ</h2>
+        <p><a href="http://localhost:5173/" target="_blank">React Router フロントエンド</a></p>
+        <p>上記リンクで実際のUIをテストできます</p>
+    </div>
+
+    <script>
+        let currentToken = '';
+
+        async function testRegister() {
+            const email = document.getElementById('regEmail').value;
+            const password = document.getElementById('regPassword').value;
+            
+            try {
+                const response = await fetch('http://localhost:3001/api/auth/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email, password }),
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    currentToken = data.token;
+                    document.getElementById('regResult').innerHTML = 
+                        `✅ 登録成功！<br>ユーザー: ${data.user.email}<br>トークン: ${data.token.substring(0, 20)}...`;
+                } else {
+                    document.getElementById('regResult').innerHTML = 
+                        `❌ 登録失敗: ${data.message}`;
+                }
+            } catch (error) {
+                document.getElementById('regResult').innerHTML = 
+                    `❌ エラー: ${error.message}`;
+            }
+        }
+
+        async function testLogin() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            try {
+                const response = await fetch('http://localhost:3001/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email, password }),
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    currentToken = data.token;
+                    document.getElementById('loginResult').innerHTML = 
+                        `✅ ログイン成功！<br>ユーザー: ${data.user.email}<br>トークン: ${data.token.substring(0, 20)}...`;
+                } else {
+                    document.getElementById('loginResult').innerHTML = 
+                        `❌ ログイン失敗: ${data.message}`;
+                }
+            } catch (error) {
+                document.getElementById('loginResult').innerHTML = 
+                    `❌ エラー: ${error.message}`;
+            }
+        }
+
+        async function testAuth() {
+            if (!currentToken) {
+                document.getElementById('authResult').innerHTML = 
+                    `❌ トークンがありません。先に登録またはログインしてください。`;
+                return;
+            }
+            
+            try {
+                const response = await fetch('http://localhost:3001/api/auth/me', {
+                    headers: {
+                        'Authorization': `Bearer ${currentToken}`,
+                    },
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('authResult').innerHTML = 
+                        `✅ 認証成功！<br>ユーザー: ${data.user.email} (ID: ${data.user.id})`;
+                } else {
+                    document.getElementById('authResult').innerHTML = 
+                        `❌ 認証失敗: ${data.message}`;
+                }
+            } catch (error) {
+                document.getElementById('authResult').innerHTML = 
+                    `❌ エラー: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>
