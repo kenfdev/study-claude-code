@@ -58,6 +58,33 @@ export default function Home() {
     }
   }
 
+  async function handleToggleComplete(id: number, completed: boolean) {
+    setTodos(prev => 
+      prev.map(todo => 
+        todo.id === id ? { ...todo, completed } : todo
+      )
+    );
+
+    try {
+      const response = await authService.updateTodo(id, { completed });
+      if (!response.success) {
+        setTodos(prev => 
+          prev.map(todo => 
+            todo.id === id ? { ...todo, completed: !completed } : todo
+          )
+        );
+        console.error('Failed to update todo:', response.message);
+      }
+    } catch (error) {
+      setTodos(prev => 
+        prev.map(todo => 
+          todo.id === id ? { ...todo, completed: !completed } : todo
+        )
+      );
+      console.error('Failed to update todo:', error);
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -137,6 +164,7 @@ export default function Home() {
             <TodoList 
               todos={todos}
               isLoading={todosLoading}
+              onToggleComplete={handleToggleComplete}
             />
           </div>
         </div>

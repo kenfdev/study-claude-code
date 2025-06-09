@@ -4,9 +4,10 @@ import type { Todo } from '~/lib/auth';
 interface TodoListProps {
   todos: Todo[];
   isLoading?: boolean;
+  onToggleComplete?: (id: number, completed: boolean) => void;
 }
 
-export function TodoList({ todos, isLoading = false }: TodoListProps) {
+export function TodoList({ todos, isLoading = false, onToggleComplete }: TodoListProps) {
   if (isLoading) {
     return (
       <div className="text-center py-8">
@@ -35,8 +36,8 @@ export function TodoList({ todos, isLoading = false }: TodoListProps) {
           <input
             type="checkbox"
             checked={todo.completed}
-            readOnly
-            className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded mr-3"
+            onChange={(e) => onToggleComplete?.(todo.id, e.target.checked)}
+            className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded mr-3 cursor-pointer"
           />
           <span
             className={`flex-1 ${

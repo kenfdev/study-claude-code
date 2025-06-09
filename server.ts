@@ -5,6 +5,7 @@ import { loginHandler } from './functions/api/auth/login';
 import { authMiddleware } from './functions/lib/middleware';
 import { createTodoHandler } from './functions/api/todos/create';
 import { listTodosHandler } from './functions/api/todos/list';
+import updateHandler from './functions/api/todos/update';
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3001;
@@ -25,6 +26,21 @@ app.get('/api/auth/me', authMiddleware, (req, res) => {
 // Todo API endpoints
 app.post('/api/todos', authMiddleware, createTodoHandler);
 app.get('/api/todos', authMiddleware, listTodosHandler);
+app.put('/api/todos/:id', authMiddleware, async (req, res) => {
+  const request = new Request(`http://localhost/api/todos/${req.params.id}`, {
+    method: 'PUT',
+    headers: {
+      'Authorization': req.headers.authorization || '',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(req.body)
+  });
+  
+  const response = await updateHandler(request, {} as any, {} as any);
+  const data = await response.json();
+  
+  res.status(response.status).json(data);
+});
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });

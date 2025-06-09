@@ -47,6 +47,11 @@ export interface CreateTodoData {
   title: string;
 }
 
+export interface UpdateTodoData {
+  title?: string;
+  completed?: boolean;
+}
+
 export class AuthService {
   private static instance: AuthService;
   
@@ -127,6 +132,30 @@ export class AuthService {
     });
 
     return response.json();
+  }
+
+  async updateTodo(id: number, data: UpdateTodoData): Promise<TodoResponse> {
+    const token = this.getToken();
+    if (!token) {
+      return { success: false, message: 'No token found' };
+    }
+
+    const response = await fetch(`${API_BASE_URL}/todos/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (response.ok) {
+      const todo = await response.json();
+      return { success: true, todo };
+    } else {
+      const error = await response.json();
+      return { success: false, message: error.error || 'Update failed' };
+    }
   }
 
   saveToken(token: string): void {
