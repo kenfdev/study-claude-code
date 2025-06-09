@@ -128,7 +128,10 @@ export async function createTodo(userId: number, title: string): Promise<Todo> {
     throw new Error('Failed to create todo');
   }
 
-  return todo;
+  return {
+    ...todo,
+    completed: Boolean(todo.completed)
+  };
 }
 
 export async function getTodosByUserId(userId: number): Promise<Todo[]> {
@@ -139,7 +142,10 @@ export async function getTodosByUserId(userId: number): Promise<Todo[]> {
     [userId]
   );
 
-  return todos || [];
+  return (todos || []).map(todo => ({
+    ...todo,
+    completed: Boolean(todo.completed)
+  }));
 }
 
 export async function updateTodo(id: number, userId: number, updates: Partial<Pick<Todo, 'title' | 'completed'>>): Promise<Todo | null> {
@@ -158,7 +164,14 @@ export async function updateTodo(id: number, userId: number, updates: Partial<Pi
     [id, userId]
   );
 
-  return todo || null;
+  if (todo) {
+    return {
+      ...todo,
+      completed: Boolean(todo.completed)
+    };
+  }
+
+  return null;
 }
 
 export async function deleteTodo(id: number, userId: number): Promise<boolean> {
