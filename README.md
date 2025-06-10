@@ -1,87 +1,137 @@
-# Welcome to React Router!
+# Todo App - Cloudflare Deployment
 
-A modern, production-ready template for building full-stack React applications using React Router.
+A full-stack Todo application built with React Router v7, Express, and SQLite, ready for deployment on Cloudflare Pages and Workers.
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/remix-run/react-router-templates/tree/main/default)
+## 🚀 Features
 
-## Features
+- ✅ User authentication (JWT)
+- ✅ Create, read, update, delete todos
+- ✅ Responsive UI with Tailwind CSS
+- ✅ TypeScript throughout
+- ✅ Cloudflare Workers for API
+- ✅ Cloudflare Pages for frontend
+- ✅ D1 Database for data persistence
 
-- 🚀 Server-side rendering
-- ⚡️ Hot Module Replacement (HMR)
-- 📦 Asset bundling and optimization
-- 🔄 Data loading and mutations
-- 🔒 TypeScript by default
-- 🎉 TailwindCSS for styling
-- 📖 [React Router docs](https://reactrouter.com/)
+## 📋 User Stories Implemented
 
-## Getting Started
+1. **User Registration/Login** - Create account and authenticate
+2. **Todo Creation** - Add new tasks to your list
+3. **Todo List Display** - View all your todos
+4. **Todo Completion** - Mark tasks as done
+5. **Todo Deletion** - Remove unwanted tasks
 
-### Installation
+## 🛠️ Tech Stack
 
-Install the dependencies:
+- **Frontend**: React Router v7, TypeScript, Tailwind CSS
+- **Backend**: Hono (Workers), JWT authentication
+- **Database**: Cloudflare D1 (SQLite)
+- **Deployment**: Cloudflare Pages & Workers
 
+## 🚀 Quick Start
+
+### Prerequisites
 ```bash
 npm install
+npm install -g wrangler
+wrangler login
 ```
 
-### Development
+### 1. Create D1 Database
+```bash
+wrangler d1 create todo-app-db
+# Copy the database_id and update wrangler.toml
+```
 
-Start the development server with HMR:
+### 2. Initialize Database
+```bash
+wrangler d1 execute todo-app-db --file=./schema.sql
+```
+
+### 3. Deploy
+```bash
+# Deploy API to Workers
+wrangler deploy
+
+# Build and deploy frontend
+npm run build
+wrangler pages deploy build/client --project-name todo-app
+```
+
+### 4. Set Environment Variables
+
+#### Workers Dashboard:
+- `JWT_SECRET`: Your secure secret key
+
+#### Update `.env.production`:
+- `VITE_API_URL`: Your Workers API URL
+
+## 📁 Project Structure
+
+```
+├── app/                    # React Router frontend
+│   ├── components/        # React components
+│   ├── routes/           # Page routes
+│   └── lib/              # Utilities
+├── workers/              # Cloudflare Workers API
+│   └── index.ts         # API endpoints
+├── functions/            # Local development API
+├── scripts/              # Deployment scripts
+└── schema.sql           # Database schema
+```
+
+## 🔧 Development
 
 ```bash
+# Terminal 1: API server
+npm run server
+
+# Terminal 2: Frontend
 npm run dev
 ```
 
-Your application will be available at `http://localhost:5173`.
+## 🚢 Production Deployment
 
-## Building for Production
+### Automatic (GitHub Actions)
+Push to main branch triggers deployment.
 
-Create a production build:
+### Manual
+```bash
+./scripts/deploy.sh
+```
+
+## 📝 Environment Variables
+
+### Development
+Create `.env` file:
+```
+PORT=3001
+NODE_ENV=development
+```
+
+### Production
+- `JWT_SECRET` - Set in Workers dashboard
+- `VITE_API_URL` - Set in `.env.production`
+
+## 🔍 Testing
 
 ```bash
-npm run build
+npm test
 ```
 
-## Deployment
+## 📚 Documentation
 
-### Docker Deployment
+- [Deployment Guide](./DEPLOYMENT.md)
+- [Quick Start](./QUICKSTART.md)
+- [GitHub Secrets Setup](./GITHUB_SECRETS.md)
 
-To build and run using Docker:
+## 🤝 Contributing
 
-```bash
-docker build -t my-app .
+1. Fork the repository
+2. Create your feature branch
+3. Commit your changes
+4. Push to the branch
+5. Open a Pull Request
 
-# Run the container
-docker run -p 3000:3000 my-app
-```
+## 📄 License
 
-The containerized application can be deployed to any platform that supports Docker, including:
-
-- AWS ECS
-- Google Cloud Run
-- Azure Container Apps
-- Digital Ocean App Platform
-- Fly.io
-- Railway
-
-### DIY Deployment
-
-If you're familiar with deploying Node applications, the built-in app server is production-ready.
-
-Make sure to deploy the output of `npm run build`
-
-```
-├── package.json
-├── package-lock.json (or pnpm-lock.yaml, or bun.lockb)
-├── build/
-│   ├── client/    # Static assets
-│   └── server/    # Server-side code
-```
-
-## Styling
-
-This template comes with [Tailwind CSS](https://tailwindcss.com/) already configured for a simple default starting experience. You can use whatever CSS framework you prefer.
-
----
-
-Built with ❤️ using React Router.
+MIT

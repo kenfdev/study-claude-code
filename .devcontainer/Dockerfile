@@ -70,6 +70,8 @@ RUN sh -c "$(wget -O- https://github.com/deluan/zsh-in-docker/releases/download/
 
 # Install Claude
 RUN npm install -g @anthropic-ai/claude-code
+# wrangler
+RUN npm install -g wrangler
 
 # Add tmux configuration for node user
 RUN echo "set -g mouse on" > /home/node/.tmux.conf

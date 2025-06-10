@@ -50,6 +50,24 @@ while read -r cidr; do
     ipset add allowed-domains "$cidr"
 done < <(echo "$gh_ranges" | jq -r '(.web + .api + .git)[]' | aggregate -q)
 
+# Fetch Cloudflare IP ranges and add them
+echo "Fetching Cloudflare IP ranges..."
+cf_ips=$(curl -s https://www.cloudflare.com/ips-v4)
+if [ -z "$cf_ips" ]; then
+    echo "ERROR: Failed to fetch Cloudflare IP ranges"
+    exit 1
+fi
+
+echo "Processing Cloudflare IPs..."
+while read -r cidr; do
+    if [[ ! "$cidr" =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}/[0-9]{1,2}$ ]]; then
+        echo "ERROR: Invalid CIDR range from Cloudflare: $cidr"
+        exit 1
+    fi
+    echo "Adding Cloudflare range $cidr"
+    ipset add allowed-domains "$cidr"
+done < <(echo "$cf_ips")
+
 # Resolve and add other allowed domains
 for domain in \
     "registry.npmjs.org" \
@@ -115,4 +133,12 @@ if ! curl --connect-timeout 5 https://api.github.com/zen >/dev/null 2>&1; then
     exit 1
 else
     echo "Firewall verification passed - able to reach https://api.github.com as expected"
+fi
+
+# Verify Cloudflare access
+if ! curl --connect-timeout 5 https://cloudflare.com >/dev/null 2>&1; then
+    echo "ERROR: Firewall verification failed - unable to reach https://cloudflare.com"
+    exit 1
+else
+    echo "Firewall verification passed - able to reach https://cloudflare.com as expected"
 fi

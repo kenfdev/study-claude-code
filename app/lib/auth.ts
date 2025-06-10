@@ -1,5 +1,5 @@
 const API_BASE_URL = typeof window !== 'undefined' 
-  ? '/api'  // ブラウザから同じオリジンでアクセス
+  ? (import.meta.env.VITE_API_URL || '/api')  // Production or development API
   : 'http://localhost:3001/api';  // サーバーサイドでは直接アクセス
 
 export interface User {

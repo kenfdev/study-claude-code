@@ -1,0 +1,16 @@
+name = "todo-app-api"
+main = "workers/index.ts"
+compatibility_date = "2024-01-01"
+
+[vars]
+DATABASE_NAME = "todo-app-db"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "todo-app-db"
+database_id = "04358af0-2956-4585-aaf8-95eecbf6b587"
+
+[env.production]
+vars = { JWT_SECRET = "your-production-jwt-secret-here" }
+
+# Build is handled automatically by wrangler

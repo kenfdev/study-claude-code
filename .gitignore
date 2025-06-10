@@ -6,3 +6,13 @@
 /build/
 
 .worktrees/
+
+.env
+
+# Database
+data.sqlite
+*.sqlite
+*.db
+
+# Wrangler/Cloudflare
+.wrangler/
