@@ -1,3 +1,4 @@
+# Production environment (main branch)
 name = "todo-app-api"
 main = "workers/index.ts"
 compatibility_date = "2024-01-01"
@@ -10,7 +11,27 @@ binding = "DB"
 database_name = "todo-app-db"
 database_id = "04358af0-2956-4585-aaf8-95eecbf6b587"
 
-[env.production]
-vars = { JWT_SECRET = "your-production-jwt-secret-here" }
+# Development environment (develop branch)
+[env.development]
+name = "todo-app-api-dev"
+vars = { DATABASE_NAME = "todo-app-db-dev" }
 
-# Build is handled automatically by wrangler
+[[env.development.d1_databases]]
+binding = "DB"
+database_name = "todo-app-db-dev"
+database_id = "placeholder-dev-db-id"
+
+# Staging environment (staging branch)
+[env.staging]
+name = "todo-app-api-staging"
+vars = { DATABASE_NAME = "todo-app-db-staging" }
+
+[[env.staging.d1_databases]]
+binding = "DB"
+database_name = "todo-app-db-staging"
+database_id = "placeholder-staging-db-id"
+
+# JWT_SECRET should be set as a secret using:
+# wrangler secret put JWT_SECRET --env production
+# wrangler secret put JWT_SECRET --env development
+# wrangler secret put JWT_SECRET --env staging

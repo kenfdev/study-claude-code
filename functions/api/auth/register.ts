@@ -1,6 +1,6 @@
 import express from 'express';
 import { createUser, findUserByEmail } from '../../lib/database';
-import { hashPassword, generateToken, isValidEmail, isValidPassword } from '../../lib/auth';
+import { hashPassword, generateToken, isValidEmail, isValidPassword, getPasswordRequirements } from '../../lib/auth';
 
 export async function registerHandler(req: express.Request, res: express.Response): Promise<void> {
   try {
@@ -25,16 +25,17 @@ export async function registerHandler(req: express.Request, res: express.Respons
     if (!isValidPassword(password)) {
       res.status(400).json({
         success: false,
-        message: 'Password must be at least 6 characters long'
+        message: getPasswordRequirements()
       });
       return;
     }
 
     const existingUser = await findUserByEmail(email);
     if (existingUser) {
+      // Use generic message to prevent user enumeration
       res.status(400).json({
         success: false,
-        message: 'Email already exists'
+        message: 'Registration failed. Please check your information and try again.'
       });
       return;
     }

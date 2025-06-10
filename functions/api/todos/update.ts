@@ -1,11 +1,12 @@
 import { updateTodo } from '../../lib/database';
 import { verifyToken } from '../../lib/auth';
+import { sanitizeTodoTitle } from '../../lib/sanitizer';
 
 export interface Env {
   // Add environment types if needed
 }
 
-export default async function handler(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+export default async function handler(request: Request, env: Env, ctx: any): Promise<Response> {
   if (request.method !== 'PUT') {
     return new Response('Method not allowed', { status: 405 });
   }
@@ -44,7 +45,7 @@ export default async function handler(request: Request, env: Env, ctx: Execution
     }
 
     // Parse request body
-    const body = await request.json();
+    const body = await request.json() as { title?: string; completed?: boolean };
     const { title, completed } = body;
 
     // Validate input
@@ -56,7 +57,7 @@ export default async function handler(request: Request, env: Env, ctx: Execution
           headers: { 'Content-Type': 'application/json' }
         });
       }
-      updates.title = title.trim();
+      updates.title = sanitizeTodoTitle(title);
     }
 
     if (completed !== undefined) {

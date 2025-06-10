@@ -2,6 +2,8 @@ name: Deploy to Cloudflare
 
 on:
   push:
+    branches: [main, develop, staging]
+  pull_request:
     branches: [main]
   workflow_dispatch:
 
@@ -21,16 +23,42 @@ jobs:
       - name: Install dependencies
         run: npm ci
       
+      - name: Determine environment
+        id: env
+        run: |
+          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            echo "environment=production" >> $GITHUB_OUTPUT
+            echo "api_url=${{ secrets.PRODUCTION_API_URL }}" >> $GITHUB_OUTPUT
+            echo "pages_project=todo-app" >> $GITHUB_OUTPUT
+            echo "wrangler_env=" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.ref }}" == "refs/heads/develop" ]]; then
+            echo "environment=development" >> $GITHUB_OUTPUT
+            echo "api_url=${{ secrets.DEVELOPMENT_API_URL }}" >> $GITHUB_OUTPUT
+            echo "pages_project=todo-app-dev" >> $GITHUB_OUTPUT
+            echo "wrangler_env=--env development" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.ref }}" == "refs/heads/staging" ]]; then
+            echo "environment=staging" >> $GITHUB_OUTPUT
+            echo "api_url=${{ secrets.STAGING_API_URL }}" >> $GITHUB_OUTPUT
+            echo "pages_project=todo-app-staging" >> $GITHUB_OUTPUT
+            echo "wrangler_env=--env staging" >> $GITHUB_OUTPUT
+          else
+            # Pull request preview
+            echo "environment=preview" >> $GITHUB_OUTPUT
+            echo "api_url=${{ secrets.DEVELOPMENT_API_URL }}" >> $GITHUB_OUTPUT
+            echo "pages_project=todo-app-preview" >> $GITHUB_OUTPUT
+            echo "wrangler_env=--env development" >> $GITHUB_OUTPUT
+          fi
+      
       - name: Build application
         run: npm run build
         env:
-          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+          VITE_API_URL: ${{ steps.env.outputs.api_url }}
       
       - name: Deploy Workers API
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          command: deploy
+          command: deploy ${{ steps.env.outputs.wrangler_env }}
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       
@@ -38,6 +66,28 @@ jobs:
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          command: pages deploy build/client --project-name=todo-app
+          command: pages deploy build/client --project-name=${{ steps.env.outputs.pages_project }}
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      
+      - name: Comment PR with preview URL
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const { data: deployment } = await github.rest.repos.listDeployments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha: context.sha,
+              per_page: 1
+            });
+            
+            if (deployment.length > 0) {
+              const previewUrl = `https://todo-app-preview.pages.dev`;
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: `🚀 **プレビューデプロイ完了**\n\n✅ [プレビューサイト](${previewUrl})\n📋 環境: Preview\n🔄 コミット: ${context.sha.substring(0, 7)}`
+              });
+            }

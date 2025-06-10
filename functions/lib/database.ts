@@ -151,11 +151,24 @@ export async function getTodosByUserId(userId: number): Promise<Todo[]> {
 export async function updateTodo(id: number, userId: number, updates: Partial<Pick<Todo, 'title' | 'completed'>>): Promise<Todo | null> {
   const database = await getDatabase();
   
-  const fields = Object.keys(updates).map(key => `${key} = ?`).join(', ');
-  const values = Object.values(updates);
+  // Whitelist allowed fields to prevent SQL injection
+  const allowedFields = ['title', 'completed'];
+  const updateFields: string[] = [];
+  const values: any[] = [];
+  
+  for (const [key, value] of Object.entries(updates)) {
+    if (allowedFields.includes(key)) {
+      updateFields.push(`${key} = ?`);
+      values.push(value);
+    }
+  }
+  
+  if (updateFields.length === 0) {
+    return null;
+  }
   
   await database.run(
-    `UPDATE todos SET ${fields} WHERE id = ? AND user_id = ?`,
+    `UPDATE todos SET ${updateFields.join(', ')} WHERE id = ? AND user_id = ?`,
     [...values, id, userId]
   );
 

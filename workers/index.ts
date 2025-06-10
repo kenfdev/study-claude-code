@@ -1,3 +1,4 @@
+/// <reference types="@cloudflare/workers-types" />
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { jwt } from 'hono/jwt';
@@ -7,7 +8,14 @@ export interface Env {
   JWT_SECRET: string;
 }
 
-const app = new Hono<{ Bindings: Env }>();
+interface HonoContext {
+  Bindings: Env;
+  Variables: {
+    jwtPayload: { userId: number; email: string };
+  };
+}
+
+const app = new Hono<HonoContext>();
 
 // Enable CORS
 app.use('/*', cors());
@@ -108,8 +116,14 @@ app.post('/api/auth/login', async (c) => {
 });
 
 // Protected routes
-app.use('/api/todos/*', authMiddleware((c) => c.env.JWT_SECRET));
-app.use('/api/auth/me', authMiddleware((c) => c.env.JWT_SECRET));
+app.use('/api/todos/*', async (c, next) => {
+  const auth = authMiddleware(c.env.JWT_SECRET);
+  return auth(c, next);
+});
+app.use('/api/auth/me', async (c, next) => {
+  const auth = authMiddleware(c.env.JWT_SECRET);
+  return auth(c, next);
+});
 
 app.get('/api/auth/me', async (c) => {
   const payload = c.get('jwtPayload');
@@ -160,7 +174,7 @@ app.get('/api/todos', async (c) => {
       'SELECT * FROM todos WHERE user_id = ? ORDER BY created_at DESC'
     ).bind(payload.userId).all();
 
-    const todos = results.map(todo => ({
+    const todos = results.map((todo: any) => ({
       id: todo.id,
       title: todo.title,
       completed: todo.completed === 1,

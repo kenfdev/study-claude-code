@@ -5,6 +5,16 @@
 - Wrangler CLI installed (`npm install -g wrangler`)
 - Node.js 18+ installed
 
+## Environment-based Deployment
+
+This application supports multiple environments with automatic branch-based deployment:
+
+### Environment Structure
+- **Production** (`main` branch): `todo-app-api` + `todo-app-db`
+- **Staging** (`staging` branch): `todo-app-api-staging` + `todo-app-db-staging`
+- **Development** (`develop` branch): `todo-app-api-dev` + `todo-app-db-dev`
+- **Preview** (Pull Requests): `todo-app-api-dev` + `todo-app-db-dev`
+
 ## Setup Steps
 
 ### 1. Cloudflare Authentication
@@ -12,31 +22,62 @@
 wrangler login
 ```
 
-### 2. Create D1 Database
-```bash
-# Create the database
-wrangler d1 create todo-app-db
+### 2. Create Environment Databases
+Use the automated setup script for each environment:
 
-# Copy the database_id from the output and update wrangler.toml
+```bash
+# Production environment
+./scripts/setup-environments.sh production
+
+# Staging environment  
+./scripts/setup-environments.sh staging
+
+# Development environment
+./scripts/setup-environments.sh development
 ```
 
-### 3. Update Configuration
-Edit `wrangler.toml` and replace `YOUR_DATABASE_ID_HERE` with the actual database ID.
+The script will:
+- Create D1 database for the environment
+- Update wrangler.toml with database ID
+- Apply database schema
+- Generate and set JWT_SECRET
 
-### 4. Initialize Database Schema
+### 3. GitHub Actions Setup
+
+Set the following secrets in your GitHub repository:
+
 ```bash
-wrangler d1 execute todo-app-db --file=./schema.sql
+# Cloudflare credentials
+CLOUDFLARE_API_TOKEN=<your-api-token>
+CLOUDFLARE_ACCOUNT_ID=<your-account-id>
+
+# Environment-specific API URLs
+PRODUCTION_API_URL=https://todo-app-api.YOUR_SUBDOMAIN.workers.dev
+STAGING_API_URL=https://todo-app-api-staging.YOUR_SUBDOMAIN.workers.dev
+DEVELOPMENT_API_URL=https://todo-app-api-dev.YOUR_SUBDOMAIN.workers.dev
 ```
 
-### 5. Set Environment Variables
-In Cloudflare Workers dashboard:
-- Go to your worker settings
-- Add environment variable: `JWT_SECRET` with a secure random string
+### 4. Automatic Deployment
 
-### 6. Deploy the Application
+The GitHub Actions workflow will automatically deploy:
+- **main branch** → Production environment
+- **staging branch** → Staging environment  
+- **develop branch** → Development environment
+- **Pull Requests** → Preview environment
+
+### 5. Manual Environment Setup (Alternative)
+
+If you prefer manual setup:
+
 ```bash
-# Run the deployment script
-./scripts/deploy.sh
+# Create database
+wrangler d1 create todo-app-db-[environment]
+
+# Apply schema
+wrangler d1 execute todo-app-db-[environment] --file=schema.sql --env [environment]
+
+# Set JWT secret
+echo "$(openssl rand -base64 32)" | wrangler secret put JWT_SECRET --env [environment]
 ```
 
 ## Manual Deployment
@@ -58,8 +99,16 @@ wrangler pages deploy build/client --project-name todo-app
 ## Environment Variables
 
 ### Workers (Backend)
-- `JWT_SECRET`: Secret key for JWT token generation
+- `JWT_SECRET`: Secret key for JWT token generation (set as secret, not in wrangler.toml)
 - `DB`: D1 database binding (automatically configured)
+
+### Security Configuration
+The application includes the following security measures:
+- **Password Requirements**: Minimum 8 characters with uppercase, lowercase, number, and special character
+- **Rate Limiting**: 5 login attempts per 15 minutes per IP
+- **Security Headers**: Helmet.js for XSS, clickjacking protection
+- **Input Sanitization**: All user inputs are sanitized to prevent XSS
+- **SQL Injection Protection**: Parameterized queries and field whitelisting
 
 ### Pages (Frontend)
 - `VITE_API_URL`: Your Workers API URL (e.g., https://todo-app-api.YOUR_SUBDOMAIN.workers.dev)
@@ -96,8 +145,16 @@ After deployment, test all user stories:
 - Check D1 database exists: `wrangler d1 list`
 
 ### Authentication Failures
-- Verify JWT_SECRET is set in Workers environment
-- Check CORS configuration
+- Verify JWT_SECRET is set as a secret: `wrangler secret list`
+- Check CORS configuration matches your frontend URL
+- Ensure JWT_SECRET environment variable is not using the default value
+
+### Security Checklist
+- [ ] JWT_SECRET is randomly generated and stored as a secret
+- [ ] No hardcoded secrets in code or config files
+- [ ] CORS is configured for your specific frontend domain
+- [ ] Rate limiting is enabled on authentication endpoints
+- [ ] All user inputs are sanitized
 
 ### Frontend Not Loading
 - Verify _redirects file exists in public/

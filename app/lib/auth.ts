@@ -150,10 +150,10 @@ export class AuthService {
     });
 
     if (response.ok) {
-      const todo = await response.json();
+      const todo = await response.json() as Todo;
       return { success: true, todo };
     } else {
-      const error = await response.json();
+      const error = await response.json() as { error?: string };
       return { success: false, message: error.error || 'Update failed' };
     }
   }

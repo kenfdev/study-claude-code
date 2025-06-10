@@ -1,5 +1,6 @@
 import express from 'express';
 import { createTodo } from '../../lib/database';
+import { sanitizeTodoTitle } from '../../lib/sanitizer';
 
 export async function createTodoHandler(req: express.Request, res: express.Response): Promise<void> {
   try {
@@ -22,8 +23,8 @@ export async function createTodoHandler(req: express.Request, res: express.Respo
       return;
     }
 
-    const trimmedTitle = title.trim();
-    if (trimmedTitle.length === 0) {
+    const sanitizedTitle = sanitizeTodoTitle(title);
+    if (sanitizedTitle.length === 0) {
       res.status(400).json({
         success: false,
         message: 'Title cannot be empty'
@@ -31,15 +32,7 @@ export async function createTodoHandler(req: express.Request, res: express.Respo
       return;
     }
 
-    if (trimmedTitle.length > 500) {
-      res.status(400).json({
-        success: false,
-        message: 'Title must be less than 500 characters'
-      });
-      return;
-    }
-
-    const todo = await createTodo(user.id, trimmedTitle);
+    const todo = await createTodo(user.id, sanitizedTitle);
 
     res.status(201).json({
       success: true,
